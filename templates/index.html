@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Chess</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<h2>Chess Game</h2>
+<div id="board"></div>
+
+<script>
+let selected = null; // { r, c }
+let turn = "white";
+let legalMoves = [];
+    
+const pieceMap = {
+    "P": "♙",
+    "R": "♖",
+    "N": "♘",
+    "B": "♗",
+    "Q": "♕",
+    "K": "♔",
+    "p": "♟",
+    "r": "♜",
+    "n": "♞",
+    "b": "♝",
+    "q": "♛",
+    "k": "♚",
+    ".": ""
+};
+
+async function loadBoard() {
+    const res = await fetch("/board");
+    const data = await res.json();
+    renderBoard(data);
+}
+
+
+async function handleClick(r, c) {
+    // always get latest board
+    const boardRes = await fetch("/board");
+    const board = await boardRes.json();
+    const piece = board[r][c];
+
+    // ======================
+    // 1️⃣ SELECT PIECE
+    // ======================
+    if (!selected) {
+        // block empty square or opponent piece
+        if (
+            piece === "." ||
+            (turn === "white" && piece === piece.toLowerCase()) ||
+            (turn === "black" && piece === piece.toUpperCase())
+        ) {
+            return;
+        }
+
+        selected = { r, c };
+
+        // 👉 send RAW UI coordinates
+        const res = await fetch("/legal-moves", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ r, c })
+        });
+
+        // backend already returns UI coordinates
+        legalMoves = await res.json();
+
+        loadBoard(); // redraw with highlights
+        return;
+    }
+
+    // ======================
+    // 2️⃣ CLICK AFTER SELECTION
+    // ======================
+    const from = { ...selected };
+    const isLegal = legalMoves.some(m => m.r === r && m.c === c);
+
+    // clear highlights immediately
+    selected = null;
+    legalMoves = [];
+    loadBoard();
+
+    if (!isLegal) return;
+
+    // ======================
+    // 3️⃣ MAKE MOVE
+    // ======================
+    const res = await fetch("/move", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            r1: from.r,
+            c1: from.c,
+            r2: r,
+            c2: c
+        })
+    });
+
+    if (res.ok) {
+        const result = await res.json();
+        turn = result.next_turn;
+        renderBoard(result.board);
+    } else {
+        alert("Illegal move");
+        loadBoard();
+    }
+}
+
+function renderBoard(board) {
+    const boardDiv = document.getElementById("board");
+    boardDiv.innerHTML = "";
+
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const square = document.createElement("div");
+            square.className = "square";
+
+            // ✅ ADD COLOR CLASSES (CRITICAL)
+            if ((r + c) % 2 === 0) {
+                square.classList.add("white");
+            } else {
+                square.classList.add("black");
+            }
+
+            square.textContent = pieceMap[board[r][c]];
+
+            // selected square
+            if (selected && selected.r === r && selected.c === c) {
+                square.classList.add("selected");
+            }
+
+            // legal move highlight
+            if (legalMoves.some(m => m.r === r && m.c === c)) {
+                square.classList.add("legal");
+            }
+
+            square.onclick = () => handleClick(r, c);
+            boardDiv.appendChild(square);
+        }
+    }
+}
+
+loadBoard();
+
+const boardDiv = document.getElementById("board");
+boardDiv.classList.toggle("black", turn === "black");
+</script>
+
+</body>
+</html>
+
+
+
+
+
+<!-- 
+async function handleClick(r, c) {
+    // always get latest board
+    const boardRes = await fetch("/board");
+    const board = await boardRes.json();
+    const piece = board[r][c];
+
+    // ======================
+    // 1️⃣ SELECT PIECE
+    // ======================
+    if (!selected) {
+        // block empty square or opponent piece
+        if (
+            piece === "." ||
+            (turn === "white" && piece === piece.toLowerCase()) ||
+            (turn === "black" && piece === piece.toUpperCase())
+        ) {
+            return;
+        }
+
+        selected = { r, c };
+
+        // 👉 send RAW UI coordinates
+        const res = await fetch("/legal-moves", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ r, c })
+        });
+
+        // backend already returns UI coordinates
+        legalMoves = await res.json();
+
+        loadBoard(); // redraw with highlights
+        return;
+    }
+
+    // ======================
+    // 2️⃣ CLICK AFTER SELECTION
+    // ======================
+    const from = { ...selected };
+    const isLegal = legalMoves.some(m => m.r === r && m.c === c);
+
+    // clear highlights immediately
+    selected = null;
+    legalMoves = [];
+    loadBoard();
+
+    if (!isLegal) return;
+
+    // ======================
+    // 3️⃣ MAKE MOVE
+    // ======================
+    const res = await fetch("/move", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            r1: from.r,
+            c1: from.c,
+            r2: r,
+            c2: c
+        })
+    });
+
+    if (res.ok) {
+        const result = await res.json();
+        turn = result.next_turn;
+        renderBoard(result.board);
+    } else {
+        alert("Illegal move");
+        loadBoard();
+    }
+}
+-->
