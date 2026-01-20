@@ -1,0 +1,171 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <title>Game Over</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .game-over {
+            margin-top: 100px;
+            text-align: center;
+        }
+        .game-over h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .game-over p {
+            font-size: 22px;
+        }
+        .game-over button {
+            margin-top: 30px;
+            padding: 12px 24px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-over">
+    <h1 id="result-title">Game Over</h1>
+    <p id="result-text"></p>
+
+    <button onclick="restartGame()">Restart Game</button>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const result = params.get("result");
+    const winner = params.get("winner");
+
+    const title = document.getElementById("result-title");
+    const text = document.getElementById("result-text");
+
+    if (result === "checkmate") {
+        title.textContent = "Checkmate!";
+        text.textContent = winner + " wins the game.";
+    } else if (result === "stalemate") {
+        title.textContent = "Stalemate!";
+        text.textContent = "The game is a draw.";
+    }
+
+    function restartGame() {
+        window.location.href = "/";
+    }
+</script>
+
+</body>
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Game Over</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+
+        .game-over {
+            background: rgba(0, 0, 0, 0.35);
+            padding: 50px 70px;
+            border-radius: 18px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            animation: pop 0.4s ease;
+        }
+
+        @keyframes pop {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .game-over h1 {
+            font-size: 56px;
+            margin-bottom: 20px;
+        }
+
+        .game-over p {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+
+        .checkmate {
+            color: #ff4b4b;
+        }
+
+        .stalemate {
+            color: #ffd54f;
+        }
+
+        button {
+            background: linear-gradient(135deg, #4f7cff, #6a9cff);
+            border: none;
+            color: white;
+            font-size: 18px;
+            padding: 14px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-over">
+    <h1 id="result-title">Game Over</h1>
+    <p id="result-text"></p>
+    <button onclick="restartGame()">Restart Game</button>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const result = params.get("result");
+    const winner = params.get("winner");
+
+    const title = document.getElementById("result-title");
+    const text = document.getElementById("result-text");
+
+    if (result === "checkmate") {
+        title.textContent = "CHECKMATE!";
+        title.classList.add("checkmate");
+        text.textContent = winner + " wins the game.";
+    } 
+    else if (result === "stalemate") {
+        title.textContent = "STALEMATE";
+        title.classList.add("stalemate");
+        text.textContent = "The game is a draw.";
+    }
+
+    function restartGame() {
+        window.location.href = "/";
+    }
+</script>
+
+</body>
+</html>

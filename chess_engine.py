@@ -195,8 +195,10 @@ def check_game_status(game, turn):
     if is_king_in_check(board, turn):
         if not has_any_legal_move(game, turn):
             return 'checkmate'
-        else:
-            return 'check'
+        elif turn == 'white':
+            return 'check_white'
+        elif turn == 'black':
+            return 'check_black'
     else:
         if not has_any_legal_move(game, turn):
             return 'stalemate'

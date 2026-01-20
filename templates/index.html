@@ -7,11 +7,14 @@
 <body>
 
 <h2>Chess Game</h2>
+<button id="reset-btn">Reset Game</button>
 <div id="board"></div>
 <script>
 let selected = null;     // { r, c }
 let legalMoves = [];
 let turn = null;        // backend controlled
+let checkStatus = "ok";
+let gameOver = false;
 
 const pieceMap = {
     "P": "♙", "R": "♖", "N": "♘", "B": "♗", "Q": "♕", "K": "♔",
@@ -19,9 +22,19 @@ const pieceMap = {
     ".": ""
 };
 
-/* =========================
-   LOAD GAME STATE
-   ========================= */
+document.getElementById("reset-btn").onclick = async () => {
+    const res = await fetch("/reset", { method: "POST" });
+    const data = await res.json();
+
+    selected = null;
+    legalMoves = [];
+    checkStatus = "ok";
+    gameOver = false;
+    turn = data.turn;
+
+    renderBoard(data.board);
+};
+
 async function loadState() {
     const stateRes = await fetch("/state");
     const stateData = await stateRes.json();
@@ -29,10 +42,8 @@ async function loadState() {
     renderBoard(stateData.board);
 }
 
-/* =========================
-   HANDLE CLICK
-   ========================= */
 async function handleClick(r, c) {
+    if (gameOver) return;
     // always sync with backend
     const stateRes = await fetch("/state");
     const stateData = await stateRes.json();
@@ -50,7 +61,7 @@ async function handleClick(r, c) {
         ) {
             return;
         }
-        
+
         selected = { r, c };
 
         const movesRes = await fetch("/legal-moves", {
@@ -89,18 +100,39 @@ async function handleClick(r, c) {
     if (moveRes.ok) {
         const moveData = await moveRes.json();
         turn = moveData.turn;
+        checkStatus = moveData.status;
         renderBoard(moveData.board);
+
+        if (checkStatus === "checkmate") {
+            gameOver = true;
+
+            const winner = turn === "white" ? "Black" : "White";
+            window.location.href =
+                `/game-over?result=checkmate&winner=${winner}`;
+        }
+
+        if (checkStatus === "stalemate") {
+            gameOver = true;
+            window.location.href = `/game-over?result=stalemate`;
+        }
+
+
     } else {
         alert("Illegal move");
     }
 }
 
-/* =========================
-   RENDER BOARD
-   ========================= */
 function renderBoard(board) {
     const boardDiv = document.getElementById("board");
     boardDiv.innerHTML = "";
+
+    let kingInCheck = null;
+    if (checkStatus === "check_white") {
+        kingInCheck = getKingPosition(board, "white");
+    } else if (checkStatus === "check_black") {
+        kingInCheck = getKingPosition(board, "black");
+    }
+
 
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
@@ -119,7 +151,16 @@ function renderBoard(board) {
             if (legalMoves.some(m => m.r === r && m.c === c)) {
                 square.classList.add("legal");
             }     
-                   
+            
+            // 🔴 king in check
+            if (
+                kingInCheck &&
+                kingInCheck.r === r &&
+                kingInCheck.c === c
+            ) {
+                square.classList.add("check");
+            }
+
             square.textContent = pieceMap[board[r][c]];
             square.onclick = () => handleClick(r, c);
             boardDiv.appendChild(square);
@@ -127,9 +168,19 @@ function renderBoard(board) {
     }
 }
 
-/* =========================
-   START APP
-   ========================= */
+function getKingPosition(board, color) {
+    const kingChar = color === "white" ? "K" : "k";
+
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            if (board[r][c] === kingChar) {
+                return { r, c };
+            }
+        }
+    }
+    return null;
+}
+
 loadState();
 </script>
 

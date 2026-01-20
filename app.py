@@ -48,7 +48,7 @@ def make_move_api():
 
     return jsonify({
         "board": game["board"],
-        "turn": game["turn"],      # ⬅ frontend must use this
+        "turn": game["turn"],
         "status": status
     })
 
@@ -71,6 +71,23 @@ def legal_moves_api():
 
     return jsonify(moves)
 
+
+@app.route("/game-over")
+def game_over():
+    return render_template("game_over.html")
+
+
+@app.route("/reset", methods=["POST"])
+def reset_game():
+    global game
+    game = create_game()
+    game["turn"] = "white"
+
+    return jsonify({
+        "board": game["board"],
+        "turn": game["turn"],
+        "status": "ok"
+    })
 
 if __name__ == "__main__":
     app.run(debug=True)

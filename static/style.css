@@ -52,3 +52,22 @@ body {
     pointer-events: none;
     z-index: 1;
 }
+
+.square.check {
+    background-color: rgba(255, 59, 59, 0.7) !important;
+}
+
+#reset-btn {
+    margin-top: 10px;
+    padding: 10px 22px;
+    font-size: 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #4f7cff, #6a9cff);
+    color: white;
+}
+
+#reset-btn:hover {
+    opacity: 0.9;
+}
