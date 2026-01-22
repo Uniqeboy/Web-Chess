@@ -7,7 +7,7 @@
 <body>
 
 <h2>Chess Game</h2>
-<button id="reset-btn">Reset Game</button>
+<button id="reset-btn">New Game</button>
 
 <div id="container">
     <div id="board"></div>
@@ -19,7 +19,16 @@
 </div>
 
 <script>
-    
+const sounds = {
+  move: new Audio("/static/sounds/move.mp3"),
+  capture: new Audio("/static/sounds/capture.mp3"),
+  check: new Audio("/static/sounds/check.mp3"),
+  checkmate: new Audio("/static/sounds/checkmate.mp3"),
+  stalemate: new Audio("/static/sounds/stalemate.mp3")
+};
+Object.values(sounds).forEach(s => s.preload = "auto");
+
+
 let selected = null;     // { r, c }
 let legalMoves = [];
 let turn = null;        // backend controlled
@@ -31,6 +40,15 @@ const pieceMap = {
     "p": "♟", "r": "♜", "n": "♞", "b": "♝", "q": "♛", "k": "♚",
     ".": ""
 };
+
+function playSound(type) {
+  if (!type || !sounds[type]) return;
+
+  sounds[type].currentTime = 0;
+  sounds[type].play().catch(err => {
+    console.warn("Sound blocked:", err);
+  });
+}
 
 function updateHistory(history) {
     const list = document.getElementById("move-list");
@@ -130,6 +148,8 @@ async function handleClick(r, c) {
         renderBoard(moveData.board);
 
         updateHistory(moveData.history);
+        console.log("Playing sound:", moveData.sound);
+        playSound(moveData.sound);
 
         if (checkStatus === "checkmate") {
             gameOver = true;

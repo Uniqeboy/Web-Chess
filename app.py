@@ -12,6 +12,17 @@ game["history"] = []
 def home():
     return render_template("index.html")
 
+def determine_sound(is_capture, status):
+    if status == "checkmate":
+        return "checkmate"
+    if status == "stalemate":
+        return "stalemate"
+    if status in ("check_white", "check_black"):
+        return "check"
+    if is_capture:
+        return "capture"
+    return "move"
+
 
 @app.route("/state")
 def get_state():
@@ -23,8 +34,6 @@ def get_state():
 
 @app.route("/move", methods=["POST"])
 def make_move_api():
-    print("BEFORE MOVE, backend turn =", game["turn"])
-
     data = request.json
     r1 = data["r1"]
     c1 = data["c1"]
@@ -39,8 +48,12 @@ def make_move_api():
         return jsonify({"error": "illegal move"}), 400
 
     # apply move
-    make_move(game, r1, c1, r2, c2)
+    result = make_move(game, r1, c1, r2, c2)
+    is_capture = result["is_capture"]
 
+    print("CAPTURE:", result["is_capture"])
+
+    
     # 🔐 SAFETY: ensure history always exists
     if "history" not in game:
         game["history"] = []
@@ -52,12 +65,16 @@ def make_move_api():
     game["turn"] = "black" if game["turn"] == "white" else "white"
 
     status = check_game_status(game, game["turn"])
+    sound = determine_sound(is_capture, status)
 
+    # 🔊 STEP 4 HAPPENS HERE
+    sound = determine_sound(is_capture, status)
     return jsonify({
         "board": game["board"],
         "turn": game["turn"],
         "status": status,
-        "history": game["history"]
+        "history": game["history"],
+        "sound": sound      # 👈 THIS IS NEW
     })
 
 

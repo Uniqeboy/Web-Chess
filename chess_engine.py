@@ -209,13 +209,23 @@ def make_move(game, r1, c1, r2, c2, promotion=None):
     board = game["board"]
     moved = game["has_moved"]
     piece = board[r1][c1]
+    
+    # 🔊 ADD THESE 2 LINES
+    target = board[r2][c2]
+    is_capture = target != '.'
+
     # ---- Castling move ----
     if piece.upper() == 'K' and abs(c2 - c1) == 2:
         side = 'king' if c2 > c1 else 'queen'
         do_castling(game, 'white' if piece.isupper() else 'black', side)
-        return
+        return {
+            "valid": True,
+            "is_capture": False
+        }
+    
     board[r2][c2] = piece
     board[r1][c1] = '.'
+
     # ---- Update moved flags ----
     if piece == 'K':
         moved['white_king'] = True
@@ -235,7 +245,10 @@ def make_move(game, r1, c1, r2, c2, promotion=None):
     elif piece == 'p' and r2 == 7:
         board[r2][c2] = promotion if promotion else 'q'
 
-
+    return {
+        "valid": True,
+        "is_capture": is_capture
+    }
 
 def is_valid_castling(game, turn, side):
     board = game["board"]
